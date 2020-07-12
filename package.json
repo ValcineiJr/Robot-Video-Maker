@@ -1,0 +1,11 @@
+{
+  "name": "Robot-Video-Maker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/ValcineiJr/Robot-Video-Maker.git",
+  "author": "Valcinei Jr <hakjog@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}
