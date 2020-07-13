@@ -1,9 +1,24 @@
 const algorithmia = require("algorithmia");
-const { KEY } = require("../credentials/api_key");
+const {
+  AlgorithmiaiKEY,
+  WatsonKEY,
+  WatsonURL,
+} = require("../credentials/api_key");
 const sentenceBoundaryDetection = require("sbd");
+const NaturalLanguageUnderstandingV1 = require("ibm-watson/natural-language-understanding/v1");
+const { IamAuthenticator } = require("ibm-watson/auth");
+
+const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
+  version: "2019-07-12",
+  authenticator: new IamAuthenticator({
+    apikey: WatsonKEY,
+  }),
+  url: WatsonURL,
+});
+
 const robot = async (content) => {
   const fetchContentFromWikipedia = async (content) => {
-    const algorithmiaAuthenticated = algorithmia(KEY);
+    const algorithmiaAuthenticated = algorithmia(AlgorithmiaiKEY);
     const wikipediaAlgorithm = algorithmiaAuthenticated.algo(
       "web/WikipediaParser/0.1.2"
     );
@@ -26,7 +41,36 @@ const robot = async (content) => {
         images: [],
       });
     });
-    console.log(sentences);
+  };
+
+  const limitMaximumSentences = (content) => {
+    content.sentences = content.sentences.slice(0, content.maximumSentences);
+  };
+
+  const fetchWatsonAndReturnKeywords = async (sentence) => {
+    return new Promise((resolve, reject) => {
+      naturalLanguageUnderstanding.analyze(
+        {
+          text: sentence,
+          features: {
+            keywords: {},
+          },
+        },
+        (error, response) => {
+          if (error) throw error;
+          const keywords = response.result.keywords.map((keyword) => {
+            return keyword.text;
+          });
+          resolve(keywords);
+        }
+      );
+    });
+  };
+
+  const fetchKeyworsOfAllSentences = async (content) => {
+    for (const sentence of content.sentences) {
+      sentence.keywords = await fetchWatsonAndReturnKeywords(sentence.text);
+    }
   };
 
   const sanitizeContent = (content) => {
@@ -63,6 +107,8 @@ const robot = async (content) => {
   await fetchContentFromWikipedia(content);
   sanitizeContent(content);
   breakContentIntoSentences(content);
+  limitMaximumSentences(content);
+  await fetchKeyworsOfAllSentences(content);
 };
 
 module.exports = robot;
