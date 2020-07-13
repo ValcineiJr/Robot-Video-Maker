@@ -1,6 +1,9 @@
 const { question, keyInSelect } = require("readline-sync");
+const robots = {
+  text: require("./robots/text.js"),
+};
 
-const start = () => {
+const start = async () => {
   const content = {};
 
   const askAndReturnSearchTerm = () => {
@@ -15,6 +18,8 @@ const start = () => {
 
   content.searchTerm = askAndReturnSearchTerm();
   content.prefix = askAndReturnPrefix();
+
+  await robots.text(content);
 
   console.log(content);
 };
