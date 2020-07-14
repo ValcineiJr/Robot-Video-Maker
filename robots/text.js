@@ -7,6 +7,7 @@ const {
 const sentenceBoundaryDetection = require("sbd");
 const NaturalLanguageUnderstandingV1 = require("ibm-watson/natural-language-understanding/v1");
 const { IamAuthenticator } = require("ibm-watson/auth");
+const state = require("./state");
 
 const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
   version: "2019-07-12",
@@ -16,7 +17,9 @@ const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
   url: WatsonURL,
 });
 
-const robot = async (content) => {
+const robot = async () => {
+  const content = state.load();
+
   const fetchContentFromWikipedia = async (content) => {
     const algorithmiaAuthenticated = algorithmia(AlgorithmiaiKEY);
     const wikipediaAlgorithm = algorithmiaAuthenticated.algo(
@@ -109,6 +112,7 @@ const robot = async (content) => {
   breakContentIntoSentences(content);
   limitMaximumSentences(content);
   await fetchKeyworsOfAllSentences(content);
+  state.save(content);
 };
 
 module.exports = robot;
